@@ -109,27 +109,6 @@ History of automated blocks and manual unblocking.
 > 📁 All screenshots live in [`docs/screenshots/`](docs/screenshots/).
 > See the checklist below if you're adding your own.
 
-<details>
-<summary><strong>How to add your own screenshots</strong></summary>
-
-```bash
-mkdir -p docs/screenshots
-# drop your .png files in this folder using these exact names:
-#   dashboard.png
-#   alerts.png
-#   statistics.png
-#   blocked-ips.png
-git add docs/screenshots/*.png
-git commit -m "docs: add dashboard screenshots"
-```
-
-Tip: resize screenshots to ~1600px max width before committing (keeps the
-repo lighter and GitHub renders faster).
-
-</details>
-
----
-
 ## 🏗️ Architecture
 
 ```
