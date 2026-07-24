@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NIDS Dashboard — Suricata</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="brand">🛡️ NIDS Dashboard — Suricata <small>v1.0</small></div>
+    <div class="controls">
+        <span id="current-time">-</span>
+        <span>Updated: <span id="last-update">-</span></span>
+        <select onchange="setRefreshInterval(this.value)">
+            <option value="5000">5s</option>
+            <option value="10000">10s</option>
+            <option value="30000">30s</option>
+        </select>
+        <button onclick="runRefreshCallbacks()">🔄 Refresh</button>
+    </div>
+</div>
+
+<div class="navbar">
+    <a href="/" class="{{ 'active' if page == 'dashboard' }}">Dashboard</a>
+    <a href="/alerts" class="{{ 'active' if page == 'alerts' }}">Alerts</a>
+    <a href="/responses" class="{{ 'active' if page == 'responses' }}">Responses</a>
+    <a href="/blocked-ips" class="{{ 'active' if page == 'blocked-ips' }}">Blocked IPs</a>
+    <a href="/statistics" class="{{ 'active' if page == 'statistics' }}">Statistics</a>
+    <a href="/system" class="{{ 'active' if page == 'system' }}">System</a>
+    <a href="/about" class="{{ 'active' if page == 'about' }}">About</a>
+</div>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<div class="footer">
+    NIDS Dashboard — Suricata | v1.0 | Flask + SQLite + Chart.js | Author: Salma Ouchahed | 2026
+</div>
+
+<script src="/static/js/common.js"></script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

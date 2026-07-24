@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2>🔍 Search & Filters</h2>
+    <div class="filters-bar">
+        <input type="text" id="f-search" placeholder="Search: IP, signature, SID, port...">
+
+        <select id="f-severity">
+            <option value="">All severities</option>
+            <option value="1">Critical (1)</option>
+            <option value="2">High (2)</option>
+            <option value="3">Medium (3)</option>
+        </select>
+
+        <select id="f-attack-type">
+            <option value="">All types</option>
+        </select>
+
+        <select id="f-category">
+            <option value="">All categories</option>
+        </select>
+
+        <input type="date" id="f-date-from" title="From date">
+        <input type="date" id="f-date-to" title="To date">
+
+        <select id="f-per-page">
+            <option value="10">10 / page</option>
+            <option value="25" selected>25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+        </select>
+
+        <button onclick="applyFilters()">Apply</button>
+        <button class="reset" onclick="resetFilters()">Reset</button>
+    </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+    <h2>📜 Alert List (<span id="total-count">0</span> results)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Signature</th>
+                <th>SID</th>
+                <th>Category</th>
+                <th>Severity</th>
+                <th>Src IP</th>
+                <th>Src Port</th>
+                <th>Dest IP</th>
+                <th>Dest Port</th>
+                <th>Protocol</th>
+                <th>Type</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody id="alerts-body"></tbody>
+    </table>
+
+    <div class="pagination">
+        <span id="page-info">Page 1 / 1</span>
+        <div class="pages" id="page-buttons"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <h3>Alert Details</h3>
+        <div id="modal-content"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPage = 1;
+
+function badgeFor(type) {
+    const t = (type || "unknown").toLowerCase();
+    return "<span class='badge " + t + "'>" + (type || "Unknown") + "</span>";
+}
+
+async function loadFilterOptions() {
+    const res = await fetch("/api/alerts/filters-options");
+    const d = await res.json();
+
+    const typeSelect = document.getElementById("f-attack-type");
+    d.attack_types.forEach(function(t) {
+        const opt = document.createElement("option");
+        opt.value = t; opt.innerText = t;
+        typeSelect.appendChild(opt);
+    });
+
+    const catSelect = document.getElementById("f-category");
+    d.categories.forEach(function(c) {
+        const opt = document.createElement("option");
+        opt.value = c; opt.innerText = c;
+        catSelect.appendChild(opt);
+    });
+}
+
+function buildQueryParams(page) {
+    const params = new URLSearchParams();
+    params.set("page", page);
+    params.set("per_page", document.getElementById("f-per-page").value);
+
+    const search = document.getElementById("f-search").value.trim();
+    if (search) params.set("search", search);
+
+    const sev = document.getElementById("f-severity").value;
+    if (sev) params.set("severity", sev);
+
+    const type = document.getElementById("f-attack-type").value;
+    if (type) params.set("attack_type", type);
+
+    const cat = document.getElementById("f-category").value;
+    if (cat) params.set("category", cat);
+
+    const from = document.getElementById("f-date-from").value;
+    if (from) params.set("date_from", from);
+
+    const to = document.getElementById("f-date-to").value;
+    if (to) params.set("date_to", to);
+
+    return params;
+}
+
+async function loadAlerts(page) {
+    if (!page) page = 1;
+    currentPage = page;
+    const params = buildQueryParams(page);
+    const res = await fetch("/api/alerts/search?" + params.toString());
+    const d = await res.json();
+
+    document.getElementById("total-count").innerText = d.total;
+
+    const tbody = document.getElementById("alerts-body");
+    tbody.innerHTML = "";
+    d.data.forEach(function(a) {
+        const row = document.createElement("tr");
+        row.innerHTML =
+            "<td>" + (a.timestamp || "").replace("T", " ").split(".")[0] + "</td>" +
+            "<td>" + a.signature + "</td>" +
+            "<td>" + a.signature_id + "</td>" +
+            "<td>" + (a.category || "-") + "</td>" +
+            "<td class='severity-" + a.severity + "'>" + a.severity + "</td>" +
+            "<td>" + a.src_ip + "</td>" +
+            "<td>" + (a.src_port != null ? a.src_port : "-") + "</td>" +
+            "<td>" + a.dest_ip + "</td>" +
+            "<td>" + (a.dest_port != null ? a.dest_port : "-") + "</td>" +
+            "<td>" + (a.protocol || "-") + "</td>" +
+            "<td>" + badgeFor(a.attack_type) + "</td>" +
+            "<td><button class='details-btn' onclick='showDetails(" + a.id + ")'>Details</button></td>";
+        tbody.appendChild(row);
+    });
+
+    renderPagination(d.page, d.total_pages);
+}
+
+function renderPagination(page, totalPages) {
+    document.getElementById("page-info").innerText = "Page " + page + " / " + (totalPages || 1);
+    const container = document.getElementById("page-buttons");
+    container.innerHTML = "";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.innerText = "«";
+    prevBtn.disabled = page <= 1;
+    prevBtn.onclick = function() { loadAlerts(page - 1); };
+    container.appendChild(prevBtn);
+
+    const start = Math.max(1, page - 2);
+    const end = Math.min(totalPages, page + 2);
+
+    for (let p = start; p <= end; p++) {
+        const btn = document.createElement("button");
+        btn.innerText = p;
+        if (p === page) btn.classList.add("active");
+        btn.onclick = (function(pageNum) {
+            return function() { loadAlerts(pageNum); };
+        })(p);
+        container.appendChild(btn);
+    }
+
+    const nextBtn = document.createElement("button");
+    nextBtn.innerText = "»";
+    nextBtn.disabled = page >= totalPages;
+    nextBtn.onclick = function() { loadAlerts(page + 1); };
+    container.appendChild(nextBtn);
+}
+
+function applyFilters() {
+    loadAlerts(1);
+}
+
+function resetFilters() {
+    document.getElementById("f-search").value = "";
+    document.getElementById("f-severity").value = "";
+    document.getElementById("f-attack-type").value = "";
+    document.getElementById("f-category").value = "";
+    document.getElementById("f-date-from").value = "";
+    document.getElementById("f-date-to").value = "";
+    document.getElementById("f-per-page").value = "25";
+    loadAlerts(1);
+}
+
+async function showDetails(id) {
+    const res = await fetch("/api/alerts/detail/" + id);
+    const d = await res.json();
+
+    let rawJsonPretty = "";
+    try {
+        rawJsonPretty = JSON.stringify(JSON.parse(d.raw_json), null, 2);
+    } catch (e) {
+        rawJsonPretty = d.raw_json || "N/A";
+    }
+
+    document.getElementById("modal-content").innerHTML =
+        "<p><strong>Signature:</strong> " + d.signature + "</p>" +
+        "<p><strong>SID:</strong> " + d.signature_id + "</p>" +
+        "<p><strong>Category:</strong> " + (d.category || "-") + "</p>" +
+        "<p><strong>Severity:</strong> " + d.severity + "</p>" +
+        "<p><strong>Attack type:</strong> " + badgeFor(d.attack_type) + "</p>" +
+        "<p><strong>Source:</strong> " + d.src_ip + ":" + (d.src_port != null ? d.src_port : "-") + "</p>" +
+        "<p><strong>Destination:</strong> " + d.dest_ip + ":" + (d.dest_port != null ? d.dest_port : "-") + "</p>" +
+        "<p><strong>Protocol:</strong> " + (d.protocol || "-") + "</p>" +
+        "<p><strong>Timestamp:</strong> " + d.timestamp + "</p>" +
+        "<p><strong>Raw JSON:</strong></p>" +
+        "<pre>" + rawJsonPretty + "</pre>";
+
+    document.getElementById("modal-overlay").classList.add("open");
+}
+
+function closeModal() {
+    document.getElementById("modal-overlay").classList.remove("open");
+}
+
+document.getElementById("modal-overlay").addEventListener("click", function(e) {
+    if (e.target.id === "modal-overlay") closeModal();
+});
+
+let searchTimeout;
+document.getElementById("f-search").addEventListener("input", function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() { loadAlerts(1); }, 400);
+});
+
+loadFilterOptions();
+loadAlerts(1);
+
+registerRefresh(function() { loadAlerts(currentPage); });
+</script>
+{% endblock %}
