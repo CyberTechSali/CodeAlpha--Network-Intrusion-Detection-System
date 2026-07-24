@@ -1,0 +1,19 @@
+alert http any any -> $HOME_NET any (msg:"LAB CUSTOM Nikto Scanner Detected via User-Agent"; flow:established,to_server; http.user_agent; content:"Nikto"; nocase; classtype:web-application-attack; sid:1000001; rev:1;)
+
+alert http any any -> $HOME_NET any (msg:"LAB CUSTOM Nmap NSE Script Scan Detected"; flow:established,to_server; http.user_agent; content:"Nmap"; nocase; classtype:attempted-recon; sid:1000002; rev:1;)
+
+alert tcp any any -> $HOME_NET any (msg:"LAB CUSTOM Possible Nmap SYN Port Scan"; flags:S; threshold:type both, track by_src, count 20, seconds 5; classtype:attempted-recon; sid:1000003; rev:1;)
+
+alert tcp any any -> $HOME_NET any (msg:"LAB CUSTOM Nmap NULL Scan Detected"; flags:0; classtype:attempted-recon; sid:1000004; rev:1;)
+
+alert tcp any any -> $HOME_NET any (msg:"LAB CUSTOM Nmap XMAS Scan Detected"; flags:FPU; classtype:attempted-recon; sid:1000005; rev:1;)
+
+alert tcp any any -> $HOME_NET any (msg:"LAB CUSTOM Nmap FIN Scan Detected"; flags:F; classtype:attempted-recon; sid:1000006; rev:1;)
+
+alert tcp any any -> $HOME_NET 22 (msg:"LAB CUSTOM Possible SSH Brute Force (Hydra)"; flow:to_server; flags:S; threshold:type both, track by_src, count 10, seconds 10; classtype:attempted-admin; sid:1000007; rev:1;)
+
+alert tcp $HOME_NET 21 -> any any (msg:"LAB CUSTOM Possible FTP Brute Force - Multiple Login Failures"; flow:to_client,established; content:"530"; threshold:type both, track by_dst, count 5, seconds 10; classtype:attempted-admin; sid:1000008; rev:1;)
+
+alert ip any any -> $HOME_NET any (msg:"LAB CUSTOM Possible hping3 Crafted Packet - Low TTL"; ttl:<10; classtype:attempted-recon; sid:1000009; rev:1;)
+
+alert tcp any any -> $HOME_NET any (msg:"LAB CUSTOM Possible SYN Flood (hping3)"; flags:S; threshold:type both, track by_dst, count 100, seconds 5; classtype:attempted-dos; sid:1000010; rev:1;)
