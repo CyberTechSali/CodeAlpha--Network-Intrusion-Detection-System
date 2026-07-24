@@ -90,7 +90,7 @@ Live search, combinable filters (severity, type, category, dates), full JSON det
 **Advanced Statistics**
 Top ports, protocols, categories, daily trends.
 
-<img src="docs/screenshots/statistics.png" alt="Statistics page" width="100%">
+<img src="Nids-Dashbord/docs/screenshots/statistics.png" alt="Statistics page" width="100%">
 
 </td>
 <td width="50%">
