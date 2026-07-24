@@ -72,14 +72,14 @@ pipeline:
 ### Main Dashboard
 Real-time overview: component status, KPIs, activity charts.
 
-<img src="docs/screenshots/dashboard.png" alt="Main Dashboard" width="850">
+<img src="Nids-Dashbord/docs/screenshots/dashbord.png" alt="Main Dashboard" width="850">
 
 <br><br>
 
 ### Live Alerts
 Live search, combinable filters (severity, type, category, dates), full JSON detail per alert.
 
-<img src="docs/screenshots/alerts.png" alt="Alerts page" width="850">
+<img src="Nids-Dashbord/docs/screenshots/alerts.png" alt="Alerts page" width="850">
 
 <br><br>
 
@@ -98,7 +98,7 @@ Top ports, protocols, categories, daily trends.
 **Blocked IPs**
 History of automated blocks and manual unblocking.
 
-<img src="docs/screenshots/blocked-ips.png" alt="Blocked IPs page" width="100%">
+<img src="Nids-Dashbord/docs/screenshots/blocked-ips.png" alt="Blocked IPs page" width="100%">
 
 </td>
 </tr>
