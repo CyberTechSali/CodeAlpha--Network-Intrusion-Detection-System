@@ -263,7 +263,7 @@ nids-dashboard/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-account>/nids-dashboard.git
+git clone https://github.com/CyberTechSali/CodeAlpha--Network-Intrusion-Detection-System.git
 cd nids-dashboard
 
 # 2. Create a virtual environment
